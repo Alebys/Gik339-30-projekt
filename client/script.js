@@ -48,7 +48,7 @@ async function loadCars() {
     }
 }
 
-// Rendera bilarnas lista på sidan
+// Rendera bil listan
 function renderCarList(cars) {
     const existingList = document.getElementById('clist');
     if (existingList) existingList.remove(); // Ta bort eventuell tidigare lista
@@ -80,7 +80,7 @@ function renderCarList(cars) {
         });
 
         container.appendChild(list); // Lägg till listan i container
-        document.body.appendChild(container); // Lägg till containern i kroppen
+        document.body.appendChild(container); // Lägg till containern i body
     }
 }
 // Utför handlingen (lägga till eller uppdatera en bil)
@@ -91,7 +91,7 @@ async function performAction() {
     let url, method;
     let successMessage = "";
 
-    // Om en bil är vald, uppdatera den; annars lägg till en ny bil
+    // Om en bil är vald genom en id, uppdatera den; annars läggs det till en ny bil
     if (selectedCarId) {
         url = `http://localhost:3000/cars/${selectedCarId}`;
         method = 'PUT';
@@ -110,10 +110,10 @@ async function performAction() {
         });
 
         if (response.ok) {
-            await loadCars(); // Ladda om bilerna
+            await loadCars(); // Ladda om bilarna
             clearInputs(); // Rensa input-fälten
             selectedCarId = null; // Återställ vald bil
-            showModal(successMessage, true); // Visa bekräftelsemeddelande
+            showModal(successMessage, true); // medelande om att bilen har lagts till eller uppdaterats
         } else {
             const error = await response.json();
             alert(error.error); // Visa felmeddelande
@@ -134,7 +134,7 @@ async function deleteCar() {
             await loadCars(); // Ladda om bilarna
             clearInputs(); // Rensa input
             selectedCarId = null; // Återställ vald bil
-            showModal('Bilen har tagits bort'); // Visa bekräftelsemeddelande
+            showModal('Bilen har tagits bort'); // medelande om att bilen har tagits bort
         } else {
             throw new Error('Delete misslyckades!');
         }
@@ -148,10 +148,10 @@ carForm.addEventListener('submit', (e) => {
     e.preventDefault(); // Förhindra att sidan laddas om
     const actionMessage = selectedCarId ? 'Vill du verkligen uppdatera denna bil?' : 'Vill du verkligen lägga till denna bil?';
     showModal(actionMessage); // Visa modal med bekräftelse
-    actionToPerform = performAction; // Sätt handlingen att vara att utföra en uppdatering eller tillägg
+    actionToPerform = performAction; // Sätt handlingen att vara lägg till/uppdatera
 });
 
-// Uppdatera bil
+// Uppdaterar bil
 document.getElementById('updateButton').addEventListener('click', () => {
     if (!selectedCarId) {
         alert('Ingen bil vald för uppdatering!'); // Om ingen bil är vald
@@ -162,7 +162,7 @@ document.getElementById('updateButton').addEventListener('click', () => {
     actionToPerform = performAction; // Sätt handlingen att vara uppdatering
 });
 
-// Ta bort bil
+// Tar bort bil
 document.getElementById('deleteButton').addEventListener('click', () => {
     if (!selectedCarId) {
         alert('Ingen bil vald för borttagning!'); // Om ingen bil är vald
@@ -170,7 +170,7 @@ document.getElementById('deleteButton').addEventListener('click', () => {
     }
 
     showModal('Vill du verkligen ta bort denna bil?');
-    actionToPerform = deleteCar; // Sätt handlingen att vara borttagning
+    actionToPerform = deleteCar; // Sätter bortagning som handling
 });
 
 // Rensa alla inputfält
@@ -181,23 +181,18 @@ function clearInputs() {
     idInput.value = '';
 }
 
-// === Modal Control Functions ===
 // Visa modalen
 function showModal(message, isFinalMessage = false) {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.remove('opacity-0'), 10);
     modalMessage.textContent = message;
 
-    // Om det är ett slutgiltigt meddelande (success), hindra automatisk stängning
-    if (isFinalMessage) {
-        actionToPerform = null; // Töm action så att endast "Bekräfta" stänger modal
-    }
 }
 
 // Dölja modalen
 function hideModal() {
   modal.classList.add('opacity-0');
-  setTimeout(() => modal.classList.add('hidden'), 300);
+  setTimeout(() => modal.classList.add('hidden'), 3000);
 }
 
 // Stäng modal vid avbryt
