@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS cars (
 
 -- Insert sample data into the cars table
 INSERT INTO cars (brand, color, year) VALUES 
-('ferrari', 'dark', '2022'),
+('ferrari', 'red', '2022'),
 ('saab', 'yellow', '1995'),
 ('honda', 'grey', '2014'),
 ('toyota', 'blue', '1955'),

@@ -1,18 +1,20 @@
-// DOM Elements
+// DOM Element
 const carForm = document.getElementById('carForm');
 const modal = document.getElementById('modal');
 const modalMessage = document.getElementById('modalMessage');
 const modalCancel = document.getElementById('modalCancel');
 const modalConfirm = document.getElementById('modalConfirm');
-// Input fields
+
+// formulärfält
 const brandInput = document.getElementById('brand');
 const colorInput = document.getElementById('color');
 const yearInput = document.getElementById('year');
 const idInput = document.getElementById('id');
 
-let selectedCarId = null; 
-let actionToPerform = null; 
+let selectedCarId = null; // Variabel för att hålla reda på vald bil
+let actionToPerform = null; // Variabel för att hålla reda på vilken handling som ska utföras
 
+// Hämta data från formuläret
 function getCarData() {
     const brand = brandInput.value.trim();
     const color = colorInput.value.trim();
@@ -23,9 +25,10 @@ function getCarData() {
         return null;
     }
 
-    return { brand, color, year };
+    return { brand, color, year }; // Returnera data 
 }
 
+// Välj en bil för redigering
 function selectCar(car) {
     selectedCarId = car.id;
     brandInput.value = car.brand;
@@ -34,19 +37,21 @@ function selectCar(car) {
     idInput.value = car.id;
 }
 
+// Ladda alla bilar från servern
 async function loadCars() {
     try {
         const response = await fetch('http://localhost:3000/cars');
         const cars = await response.json();
-        renderCarList(cars);
+        renderCarList(cars); // Visa listan med bilar
     } catch (error) {
         console.error('Error loading cars:', error);
     }
 }
 
+// Rendera bilarnas lista på sidan
 function renderCarList(cars) {
     const existingList = document.getElementById('clist');
-    if (existingList) existingList.remove();
+    if (existingList) existingList.remove(); // Ta bort eventuell tidigare lista
 
     if (cars.length > 0) {
         const container = document.createElement('div');
@@ -68,53 +73,57 @@ function renderCarList(cars) {
             `;
 
             carDiv.addEventListener('click', () => {
-                selectCar(car);
+                selectCar(car); // Välj bilen när man klickar på en bil
             });
 
-            list.appendChild(carDiv);
+            list.appendChild(carDiv); // Lägg till bilen i listan
         });
 
-        container.appendChild(list);
-        document.body.appendChild(container);
+        container.appendChild(list); // Lägg till listan i container
+        document.body.appendChild(container); // Lägg till containern i kroppen
     }
 }
-
+// Utför handlingen (lägga till eller uppdatera en bil)
 async function performAction() {
-    const carData = getCarData();
-    if (!carData) return;
+    const carData = getCarData(); // Hämta bilens data från formuläret
+    if (!carData) return; // Om datan är ogiltig, gör inget
 
     let url, method;
+    let successMessage = "";
+
+    // Om en bil är vald, uppdatera den; annars lägg till en ny bil
     if (selectedCarId) {
         url = `http://localhost:3000/cars/${selectedCarId}`;
         method = 'PUT';
+        successMessage = 'Bilen har uppdaterats!';
     } else {
         url = 'http://localhost:3000/cars';
         method = 'POST';
+        successMessage = 'Bilen har lagts till!';
     }
 
     try {
         const response = await fetch(url, {
             method,
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(carData)
+            body: JSON.stringify(carData) // Skicka bilens data som JSON
         });
 
         if (response.ok) {
-            loadCars(); 
-            clearInputs(); 
-            selectedCarId = null; 
+            await loadCars(); // Ladda om bilerna
+            clearInputs(); // Rensa input-fälten
+            selectedCarId = null; // Återställ vald bil
+            showModal(successMessage, true); // Visa bekräftelsemeddelande
         } else {
             const error = await response.json();
-            alert(error.error);
+            alert(error.error); // Visa felmeddelande
         }
     } catch (error) {
         console.error(`Error performing action: ${method} ${url}`, error);
-    } finally {
-        hideModal(); 
     }
 }
 
-// Delete a car
+// Tar bort en bil
 async function deleteCar() {
     try {
         const response = await fetch(`http://localhost:3000/cars/${selectedCarId}`, {
@@ -122,47 +131,49 @@ async function deleteCar() {
         });
 
         if (response.ok) {
-            loadCars(); 
-            clearInputs(); 
-            selectedCarId = null; 
-            showModal('Bilen har tagits bort.');
+            await loadCars(); // Ladda om bilarna
+            clearInputs(); // Rensa input
+            selectedCarId = null; // Återställ vald bil
+            showModal('Bilen har tagits bort'); // Visa bekräftelsemeddelande
         } else {
-            throw new Error('Delete failed');
+            throw new Error('Delete misslyckades!');
         }
     } catch (error) {
-        alert('Kunde inte ta bort bilen.');
-    } finally {
-        hideModal();
+        alert('Kunde inte ta bort bilen.'); // Visa felmeddelande
     }
 }
 
+// Hantera formulärsändning
 carForm.addEventListener('submit', (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Förhindra att sidan laddas om
     const actionMessage = selectedCarId ? 'Vill du verkligen uppdatera denna bil?' : 'Vill du verkligen lägga till denna bil?';
-    showModal(actionMessage);
-    actionToPerform = performAction;
+    showModal(actionMessage); // Visa modal med bekräftelse
+    actionToPerform = performAction; // Sätt handlingen att vara att utföra en uppdatering eller tillägg
 });
 
+// Uppdatera bil
 document.getElementById('updateButton').addEventListener('click', () => {
     if (!selectedCarId) {
-        alert('Ingen bil vald för uppdatering!');
+        alert('Ingen bil vald för uppdatering!'); // Om ingen bil är vald
         return;
     }
 
     showModal('Vill du verkligen uppdatera denna bil?');
-    actionToPerform = performAction;
+    actionToPerform = performAction; // Sätt handlingen att vara uppdatering
 });
 
+// Ta bort bil
 document.getElementById('deleteButton').addEventListener('click', () => {
     if (!selectedCarId) {
-        alert('Ingen bil vald för borttagning!');
+        alert('Ingen bil vald för borttagning!'); // Om ingen bil är vald
         return;
     }
 
     showModal('Vill du verkligen ta bort denna bil?');
-    actionToPerform = deleteCar;
+    actionToPerform = deleteCar; // Sätt handlingen att vara borttagning
 });
 
+// Rensa alla inputfält
 function clearInputs() {
     brandInput.value = '';
     colorInput.value = '';
@@ -170,22 +181,36 @@ function clearInputs() {
     idInput.value = '';
 }
 
-function showModal(message) {
+// === Modal Control Functions ===
+// Visa modalen
+function showModal(message, isFinalMessage = false) {
     modal.classList.remove('hidden');
     setTimeout(() => modal.classList.remove('opacity-0'), 10);
     modalMessage.textContent = message;
+
+    // Om det är ett slutgiltigt meddelande (success), hindra automatisk stängning
+    if (isFinalMessage) {
+        actionToPerform = null; // Töm action så att endast "Bekräfta" stänger modal
+    }
 }
 
+// Dölja modalen
 function hideModal() {
-    modal.classList.add('opacity-0');
-    setTimeout(() => modal.classList.add('hidden'), 300);
+  modal.classList.add('opacity-0');
+  setTimeout(() => modal.classList.add('hidden'), 300);
 }
 
+// Stäng modal vid avbryt
 modalCancel.addEventListener('click', hideModal);
-modalConfirm.addEventListener('click', () => {
+
+// Bekräfta handling i modal
+modalConfirm.addEventListener('click', async () => {
     if (typeof actionToPerform === 'function') {
-        actionToPerform(); 
+        await actionToPerform(); // Vänta tills handlingen är klar
+        hideModal(); // Stäng modal efter att handlingen är klar
+        actionToPerform = null; // Förhindra att handlingen utförs två gånger
     }
 });
 
+// Ladda bilar när sidan är klar
 document.addEventListener('DOMContentLoaded', loadCars);
